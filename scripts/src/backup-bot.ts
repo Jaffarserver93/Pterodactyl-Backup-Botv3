@@ -201,20 +201,6 @@ async function main(): Promise<void> {
   fs.writeFileSync(SESSION_FILE, savedSession, "utf8");
   log("telegram", "Logged in — session saved");
 
-  // Terminate all other Telegram sessions
-  try {
-    setStatus({ phase: "terminating_sessions", message: "Terminating other Telegram sessions..." });
-    const authsResult = await client.invoke(new Api.account.GetAuthorizations());
-    const others = authsResult.authorizations.filter((a) => !a.current);
-    log("telegram", `Terminating ${others.length} other session(s)...`);
-    for (const auth of others) {
-      await client.invoke(new Api.account.ResetAuthorization({ hash: auth.hash }));
-    }
-    log("telegram", "All other sessions terminated");
-  } catch (err: unknown) {
-    log("telegram", `Could not terminate sessions: ${String(err)}`);
-  }
-
   log("bot", "Ready — starting 5-minute backup loop");
   setStatus({ phase: "ready", message: "Waiting for first 5-minute interval..." });
 
@@ -270,6 +256,7 @@ async function main(): Promise<void> {
         file: TMP_BACKUP,
         caption: `🗄 *Pterodactyl Backup*\n📅 ${ts}\n💾 ${(fileSize / 1024 / 1024).toFixed(2)} MB\n🆔 ${backup.uuid}`,
         forceDocument: true,
+        workers: 4,
       });
 
       const newMsgId = sentMsg.id;
