@@ -1,0 +1,19 @@
+{
+  "name": "ptero-backup-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/backup-bot.ts",
+    "dev": "tsx src/backup-bot.ts"
+  },
+  "dependencies": {
+    "axios": "^1.9.0",
+    "big-integer": "^1.6.52",
+    "telegram": "^2.26.22",
+    "tsx": "^4.21.0"
+  },
+  "overrides": {
+    "es5-ext": "0.10.53"
+  }
+}

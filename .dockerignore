@@ -1,0 +1,29 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Replit workspace
+artifacts/
+lib/
+scripts/
+.replit
+.local/
+.agents/
+.upm/
+
+# Secrets & session (never bake into image)
+.env
+.telegram_session
+.bot_state.json
+
+# Logs and temp
+*.log
+/tmp/
+
+# Git
+.git
+.gitignore
+
+# Misc
+*.md
+attached_assets/
