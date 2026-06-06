@@ -68,11 +68,41 @@ const ptero = axios.create({
   timeout: 60_000,
 });
 
+// Files/dirs to EXCLUDE — everything except world*, plugins/
+const IGNORED_PATHS = [
+  "*.jar",
+  "*.log",
+  "logs",
+  "crash-reports",
+  "cache",
+  "libraries",
+  "versions",
+  "server.properties",
+  "bukkit.yml",
+  "spigot.yml",
+  "paper.yml",
+  "paper-global.yml",
+  "paper-world-defaults.yml",
+  "config",
+  "ops.json",
+  "whitelist.json",
+  "banned-ips.json",
+  "banned-players.json",
+  "eula.txt",
+  "usercache.json",
+  "usernamecache.json",
+  "server-icon.png",
+  "help.yml",
+  "commands.yml",
+  "permissions.yml",
+  ".console_history",
+].join("\n");
+
 async function createBackup(): Promise<{ uuid: string; name: string }> {
   const name = `worlds+plugins-${new Date().toISOString().replace(/[:.]/g, "-")}`;
   const res = await ptero.post(`/servers/${SERVER_ID}/backups`, {
     name,
-    ignored: "",
+    ignored: IGNORED_PATHS,
     is_locked: false,
   });
   return res.data.attributes as { uuid: string; name: string };
