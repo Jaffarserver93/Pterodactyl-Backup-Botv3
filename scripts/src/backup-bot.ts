@@ -144,6 +144,29 @@ async function deleteBackup(uuid: string): Promise<void> {
   log("ptero", `Deleted backup ${uuid}`);
 }
 
+async function deleteAllBackups(): Promise<void> {
+  const res = await ptero.get(`/servers/${SERVER_ID}/backups?per_page=50`);
+  const backups: Array<{ attributes: { uuid: string; name: string; is_locked: boolean } }> =
+    res.data.data ?? [];
+  if (backups.length === 0) {
+    log("ptero", "No existing backups to delete");
+    return;
+  }
+  log("ptero", `Deleting ${backups.length} existing backup(s) to free slot...`);
+  for (const b of backups) {
+    const { uuid, name, is_locked } = b.attributes;
+    if (is_locked) {
+      log("ptero", `Skipping locked backup ${uuid} (${name})`);
+      continue;
+    }
+    try {
+      await deleteBackup(uuid);
+    } catch (err: unknown) {
+      log("ptero", `Could not delete ${uuid}: ${String(err)}`);
+    }
+  }
+}
+
 // ─── File Download ────────────────────────────────────────────────────────────
 
 async function downloadFile(url: string, dest: string): Promise<void> {
@@ -242,15 +265,9 @@ async function main(): Promise<void> {
     const state = loadState();
 
     try {
-      // ── 1. Delete previous Pterodactyl backup ──
-      if (state.previousBackupUuid) {
-        setStatus({ phase: "cycle", step: "deleting_old_backup", uuid: state.previousBackupUuid });
-        try {
-          await deleteBackup(state.previousBackupUuid);
-        } catch (err: unknown) {
-          log("ptero", `Could not delete old backup (may already be gone): ${String(err)}`);
-        }
-      }
+      // ── 1. Delete ALL existing backups to free the slot ──
+      setStatus({ phase: "cycle", step: "deleting_old_backups" });
+      await deleteAllBackups();
 
       // ── 2. Create new backup ──
       setStatus({ phase: "cycle", step: "creating_backup" });
