@@ -11,6 +11,26 @@ env = { "CI" = "true" }
 [workflows]
 runButton = "Project"
 
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Backup Bot"
+
+[[workflows.workflow]]
+name = "Backup Bot"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm --filter @workspace/scripts run backup-bot"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
 [agent]
 stack = "PNPM_WORKSPACE"
 expertMode = true
@@ -26,3 +46,13 @@ externalPort = 80
 [[ports]]
 localPort = 8081
 externalPort = 8081
+
+[userenv]
+
+[userenv.shared]
+PTERO_URL = "https://project.flarelax.com"
+PTERO_SERVER_ID = "e4b4246c"
+PTERO_API_KEY = "ptlc_ceuglVPhhSML7VML2GdgYfvkGNFZABCeiSEDOFtX9iX"
+TELEGRAM_API_ID = "21678382"
+TELEGRAM_API_HASH = "72bc6071f7c442856960d5cd9e640c4b"
+TELEGRAM_PHONE = "+918317570365"
