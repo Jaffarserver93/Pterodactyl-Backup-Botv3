@@ -355,17 +355,7 @@ async function main(): Promise<void> {
       const downloadUrl = await getDownloadUrl(backup.uuid);
       await downloadFile(downloadUrl, TMP_BACKUP);
 
-      // ── 5. Delete previous Telegram message ──
-      if (state.previousTelegramMsgId) {
-        try {
-          await client.deleteMessages("me", [state.previousTelegramMsgId], { revoke: true });
-          log("telegram", `Deleted old message ${state.previousTelegramMsgId}`);
-        } catch (err: unknown) {
-          log("telegram", `Could not delete old message: ${String(err)}`);
-        }
-      }
-
-      // ── 6. Upload to Saved Messages ──
+      // ── 5. Upload new backup to Saved Messages first ──
       setStatus({ phase: "cycle", step: "uploading_to_telegram" });
       const fileSize = fs.statSync(TMP_BACKUP).size;
       const fileMB = (fileSize / 1024 / 1024).toFixed(2);
@@ -383,6 +373,16 @@ async function main(): Promise<void> {
 
       const newMsgId = sentMsg.id;
       log("telegram", `Uploaded — message ID ${newMsgId}`);
+
+      // ── 6. Now delete the previous backup message (new one is safely uploaded) ──
+      if (state.previousTelegramMsgId) {
+        try {
+          await client.deleteMessages("me", [state.previousTelegramMsgId], { revoke: true });
+          log("telegram", `Deleted previous backup message ${state.previousTelegramMsgId}`);
+        } catch (err: unknown) {
+          log("telegram", `Could not delete old message: ${String(err)}`);
+        }
+      }
 
       // ── 7. Persist new state ──
       saveState({ previousBackupUuid: backup.uuid, previousTelegramMsgId: newMsgId });
