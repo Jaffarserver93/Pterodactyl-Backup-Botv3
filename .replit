@@ -55,4 +55,4 @@ externalPort = 3000
 
 [userenv.shared]
 PTERO_URL = "https://panel.vektalnodes.in"
-PTERO_SERVER_ID = "e4b4246c"
+PTERO_SERVER_ID = "aa648642"
