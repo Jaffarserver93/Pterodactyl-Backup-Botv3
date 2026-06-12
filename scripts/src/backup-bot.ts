@@ -367,15 +367,19 @@ async function main(): Promise<void> {
 
       // ── 6. Upload to Saved Messages ──
       setStatus({ phase: "cycle", step: "uploading_to_telegram" });
-      log("telegram", "Uploading backup to Saved Messages...");
       const fileSize = fs.statSync(TMP_BACKUP).size;
+      const fileMB = (fileSize / 1024 / 1024).toFixed(2);
+      log("telegram", `Uploading backup to Saved Messages (${fileMB} MB)...`);
       const ts = new Date().toISOString();
+
+      const uploadStart = Date.now();
       const sentMsg = await client.sendFile("me", {
         file: TMP_BACKUP,
-        caption: `🗄 *Pterodactyl Backup*\n📅 ${ts}\n💾 ${(fileSize / 1024 / 1024).toFixed(2)} MB\n🆔 ${backup.uuid}`,
+        caption: `🗄 *Pterodactyl Backup*\n📅 ${ts}\n💾 ${fileMB} MB\n🆔 ${backup.uuid}`,
         forceDocument: true,
-        workers: 4,
+        workers: 16,
       });
+      log("telegram", `Upload done in ${((Date.now() - uploadStart) / 1000).toFixed(1)}s`);
 
       const newMsgId = sentMsg.id;
       log("telegram", `Uploaded — message ID ${newMsgId}`);
