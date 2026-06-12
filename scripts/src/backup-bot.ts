@@ -10,12 +10,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SCRIPTS_ROOT = path.join(__dirname, "..");
 
 // Config
-const API_ID = parseInt(process.env.TELEGRAM_API_ID || "21678382");
-const API_HASH = process.env.TELEGRAM_API_HASH || "72bc6071f7c442856960d5cd9e640c4b";
-const PHONE = process.env.TELEGRAM_PHONE || "+918317570365";
-const PTERO_URL = (process.env.PTERO_URL || "https://project.flarelax.com").replace(/\/$/, "");
-const PTERO_KEY = process.env.PTERO_API_KEY || "ptlc_ceuglVPhhSML7VML2GdgYfvkGNFZABCeiSEDOFtX9iX";
-const SERVER_ID = process.env.PTERO_SERVER_ID || "e4b4246c";
+if (!process.env.TELEGRAM_API_ID) throw new Error("TELEGRAM_API_ID is required");
+if (!process.env.TELEGRAM_API_HASH) throw new Error("TELEGRAM_API_HASH is required");
+if (!process.env.TELEGRAM_PHONE) throw new Error("TELEGRAM_PHONE is required");
+if (!process.env.PTERO_URL) throw new Error("PTERO_URL is required");
+if (!process.env.PTERO_API_KEY) throw new Error("PTERO_API_KEY is required");
+if (!process.env.PTERO_SERVER_ID) throw new Error("PTERO_SERVER_ID is required");
+
+const API_ID = parseInt(process.env.TELEGRAM_API_ID);
+const API_HASH = process.env.TELEGRAM_API_HASH;
+const PHONE = process.env.TELEGRAM_PHONE;
+const PTERO_URL = process.env.PTERO_URL.replace(/\/$/, "");
+const PTERO_KEY = process.env.PTERO_API_KEY;
+const SERVER_ID = process.env.PTERO_SERVER_ID;
 const INTERVAL_MS = 5 * 60 * 1000;
 
 const SESSION_FILE = path.join(SCRIPTS_ROOT, ".telegram_session");
@@ -196,7 +203,37 @@ async function downloadFile(url: string, dest: string): Promise<void> {
 
 // ─── OTP Flow ─────────────────────────────────────────────────────────────────
 
+async function readLineFromStdin(prompt: string): Promise<string> {
+  process.stdout.write(prompt);
+  return new Promise((resolve) => {
+    let buf = "";
+    const onData = (chunk: Buffer) => {
+      buf += chunk.toString();
+      const nl = buf.indexOf("\n");
+      if (nl !== -1) {
+        process.stdin.removeListener("data", onData);
+        process.stdin.pause();
+        resolve(buf.slice(0, nl).trim());
+      }
+    };
+    process.stdin.resume();
+    process.stdin.on("data", onData);
+  });
+}
+
 async function waitForOtp(): Promise<string> {
+  const isTTY = Boolean(process.stdin.isTTY);
+
+  if (isTTY) {
+    // Running interactively in a terminal — prompt directly
+    log("telegram", "Telegram sent a login code to your phone.");
+    const code = await readLineFromStdin("  Enter the Telegram OTP code: ");
+    if (!code) throw new Error("No OTP entered");
+    log("telegram", "OTP received");
+    return code;
+  }
+
+  // Running as a background service — wait for the API server to write the file
   setStatus({ phase: "awaiting_otp", message: "Open /api/bot/setup and enter the OTP sent to your phone" });
   log("telegram", "OTP sent. Visit /api/bot/setup to enter the code.");
 
