@@ -161,7 +161,16 @@ async function deleteBackup(uuid: string): Promise<void> {
 }
 
 async function deleteAllBackups(): Promise<void> {
-  const res = await ptero.get(`/servers/${SERVER_ID}/backups?per_page=50`);
+  log("ptero", `Using server ID: ${SERVER_ID} on ${PTERO_URL}`);
+  let res;
+  try {
+    res = await ptero.get(`/servers/${SERVER_ID}/backups?per_page=50`);
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err) && err.response) {
+      throw new Error(`deleteAllBackups failed ${err.response.status}: ${JSON.stringify(err.response.data)}`);
+    }
+    throw err;
+  }
   const backups: Array<{ attributes: { uuid: string; name: string; is_locked: boolean } }> =
     res.data.data ?? [];
   if (backups.length === 0) {
