@@ -291,12 +291,18 @@ async function main(): Promise<void> {
   fs.writeFileSync(SESSION_FILE, savedSession, "utf8");
   log("telegram", "Logged in — session saved");
 
-  // Notify Saved Messages that the bot is online
+  // Notify Saved Messages that the bot is online, then delete after 30s
   try {
-    await client.sendMessage("me", {
+    const startMsg = await client.sendMessage("me", {
       message: `🟢 *Backup Bot Started*\n📅 ${new Date().toISOString()}\n⏱ Backup interval: every 5 minutes`,
     });
-    log("telegram", "Startup message sent to Saved Messages");
+    log("telegram", "Startup message sent to Saved Messages (deletes in 30s)");
+    setTimeout(async () => {
+      try {
+        await client.deleteMessages("me", [startMsg.id], { revoke: true });
+        log("telegram", "Startup message deleted");
+      } catch { /* ignore */ }
+    }, 30_000);
   } catch (err: unknown) {
     log("telegram", `Could not send startup message: ${String(err)}`);
   }
