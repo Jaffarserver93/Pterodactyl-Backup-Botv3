@@ -291,6 +291,16 @@ async function main(): Promise<void> {
   fs.writeFileSync(SESSION_FILE, savedSession, "utf8");
   log("telegram", "Logged in — session saved");
 
+  // Notify Saved Messages that the bot is online
+  try {
+    await client.sendMessage("me", {
+      message: `🟢 *Backup Bot Started*\n📅 ${new Date().toISOString()}\n⏱ Backup interval: every 5 minutes`,
+    });
+    log("telegram", "Startup message sent to Saved Messages");
+  } catch (err: unknown) {
+    log("telegram", `Could not send startup message: ${String(err)}`);
+  }
+
   log("bot", "Ready — starting 5-minute backup loop");
   setStatus({ phase: "ready", message: "Waiting for first 5-minute interval..." });
 
