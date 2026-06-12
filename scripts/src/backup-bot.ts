@@ -106,13 +106,22 @@ const IGNORED_PATHS = [
 ].join("\n");
 
 async function createBackup(): Promise<{ uuid: string; name: string }> {
-  const name = `worlds+plugins-${new Date().toISOString().replace(/[:.]/g, "-")}`;
-  const res = await ptero.post(`/servers/${SERVER_ID}/backups`, {
-    name,
-    ignored: IGNORED_PATHS,
-    is_locked: false,
-  });
-  return res.data.attributes as { uuid: string; name: string };
+  const name = `worlds_plugins_${new Date().toISOString().replace(/[:.]/g, "-")}`;
+  try {
+    const res = await ptero.post(`/servers/${SERVER_ID}/backups`, {
+      name,
+      ignored: IGNORED_PATHS,
+      is_locked: false,
+    });
+    return res.data.attributes as { uuid: string; name: string };
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err) && err.response) {
+      throw new Error(
+        `Backup creation failed ${err.response.status}: ${JSON.stringify(err.response.data)}`
+      );
+    }
+    throw err;
+  }
 }
 
 async function waitForBackupCompletion(uuid: string): Promise<void> {

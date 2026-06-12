@@ -50,5 +50,5 @@ externalPort = 8081
 [userenv]
 
 [userenv.shared]
-PTERO_URL = "https://project.flarelax.com"
+PTERO_URL = "https://panel.vektalnodes.in"
 PTERO_SERVER_ID = "e4b4246c"
